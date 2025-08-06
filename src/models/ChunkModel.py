@@ -8,7 +8,6 @@ from .schemas import FileChunk
 class ChunkModel(BaseModel):
     def __init__(self, db: object):
         super().__init__(db)
-        self.model = FileChunk
         self.collection = self.db.file_chunks
 
     async def create_chunk(self, chunk: FileChunk):

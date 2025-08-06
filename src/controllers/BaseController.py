@@ -9,12 +9,10 @@ class BaseController:
     def __init__(self):
         self.app_settings = get_settings()
         self.base_dir = os.path.dirname(os.path.dirname(__file__))
-        self.file_dir = os.path.join(self.base_dir, "assets/files")
-        self.base_dir = os.path.dirname(os.path.dirname(__file__))
-        self.file_dir = os.path.join(self.base_dir, "assets/files")
+        self.files_dir = os.path.join(self.base_dir, "assets/files")
 
-        if not os.path.exists(self.file_dir):
-            os.makedirs(self.file_dir)
+        if not os.path.exists(self.files_dir):
+            os.makedirs(self.files_dir)
 
     def generate_random_string(self, length: int = 12):
         return "".join(random.choices(string.ascii_lowercase + string.digits, k=length))
