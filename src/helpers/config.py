@@ -1,7 +1,12 @@
 from pydantic_settings import BaseSettings
 
 
-class Settings(BaseSettings):
+class Settings(BaseSettings, object):
+    def __new__(cls):
+        if not hasattr(cls, "instance"):
+            cls.instance = super(Settings, cls).__new__(cls)
+        return cls.instance
+
     NAME: str
     MONGO_URL: str
     DATABASE: str
