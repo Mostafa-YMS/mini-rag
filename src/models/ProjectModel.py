@@ -7,6 +7,22 @@ class ProjectModel(BaseModel):
         super().__init__(db=db)
         self.collection = self.db.projects
 
+    @classmethod
+    async def create_instance(cls, db: object):
+        instance = cls(db=db)
+        await instance.__init_collection()
+        return instance
+
+    async def __init_collection(self):
+        all_collections = await self.db.list_collection_names()
+        if "projects" not in all_collections:
+            self.collection = self.db.projects
+            indexes = Project.get_indexes()
+            for index in indexes:
+                await self.collection.create_index(
+                    keys=index["key"], name=index["name"], unique=index["unique"]
+                )
+
     async def create_project(self, project: Project):
         return await self.collection.insert_one(
             project.model_dump(by_alias=True, exclude_unset=True)

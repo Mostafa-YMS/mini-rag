@@ -22,7 +22,7 @@ async def upload_file(
     file: UploadFile,
     file_controller: FileController = Depends(FileController),
 ):
-    project_model = ProjectModel(request.app.db)
+    project_model = await ProjectModel.create_instance(request.app.db)
     await project_model.get_or_create_project(project_id=project_id)
 
     is_valid = file_controller.validate_file(file=file, max_size=2)
@@ -68,8 +68,8 @@ async def process_file(
     project_id: str,
     process_controller: ProcessController = Depends(ProcessController),
 ):
-    project_model = ProjectModel(request.app.db)
-    chunk_model = ChunkModel(request.app.db)
+    project_model = await ProjectModel.create_instance(request.app.db)
+    chunk_model = await ChunkModel.create_instance(request.app.db)
     project = await project_model.get_or_create_project(project_id=project_id)
 
     chunks = process_controller.process_file(

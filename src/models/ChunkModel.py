@@ -10,6 +10,22 @@ class ChunkModel(BaseModel):
         super().__init__(db)
         self.collection = self.db.file_chunks
 
+    @classmethod
+    async def create_instance(cls, db: object):
+        instance = cls(db=db)
+        await instance.__init_collection()
+        return instance
+
+    async def __init_collection(self):
+        all_collections = await self.db.list_collection_names()
+        if "file_chunks" not in all_collections:
+            self.collection = self.db.file_chunks
+            indexes = FileChunk.get_indexes()
+            for index in indexes:
+                await self.collection.create_index(
+                    keys=index["key"], name=index["name"], unique=index["unique"]
+                )
+
     async def create_chunk(self, chunk: FileChunk):
         return await self.collection.insert_one(
             chunk.model_dump(by_alias=True, exclude_unset=True)
