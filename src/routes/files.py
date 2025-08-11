@@ -1,13 +1,14 @@
 import logging
+import os
 
 import aiofiles
 from fastapi import APIRouter, Depends, Request, UploadFile, status
 from fastapi.responses import JSONResponse
 
 from controllers import FileController, ProcessController
-from models import ChunkModel, ProjectModel
+from models import AssetModel, ChunkModel, ProjectModel
 from models.enums import ResponseMessage
-from models.schemas import FileChunk
+from models.schemas import Asset, FileChunk
 
 from .schemas import ProcessRequest
 
@@ -23,7 +24,7 @@ async def upload_file(
     file_controller: FileController = Depends(FileController),
 ):
     project_model = await ProjectModel.create_instance(request.app.db)
-    await project_model.get_or_create_project(project_id=project_id)
+    project = await project_model.get_or_create_project(project_id=project_id)
 
     is_valid = file_controller.validate_file(file=file, max_size=2)
 
@@ -52,10 +53,20 @@ async def upload_file(
             status_code=status.HTTP_400_BAD_REQUEST,
         )
 
+    asset_model = await AssetModel.create_instance(request.app.db)
+    asset = await asset_model.create_asset(
+        Asset(
+            project_id=project.id,
+            type="file",
+            name=file_id,
+            size=os.path.getsize(file_path),
+        )
+    )
+
     return JSONResponse(
         content={
             "message": ResponseMessage.SUCCESS.value,
-            "file_id": file_id,
+            "file_id": str(asset.id),
         },
         status_code=status.HTTP_200_OK,
     )
