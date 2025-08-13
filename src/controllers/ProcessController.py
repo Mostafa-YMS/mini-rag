@@ -1,3 +1,4 @@
+import logging
 import os
 
 from langchain_community.document_loaders import PyMuPDFLoader, TextLoader
@@ -8,6 +9,7 @@ from models.enums import ProcessingEnum
 from .BaseController import BaseController
 from .ProjectController import ProjectController
 
+logger = logging.getLogger("uvicorn.error")
 
 class ProcessController(BaseController):
     def __init__(self, project_id: str):
@@ -23,6 +25,9 @@ class ProcessController(BaseController):
         file_ext = self.__get_file_extension(file_id)
         file_path = os.path.join(self.project_path, file_id)
 
+        if not os.path.exists(file_path):
+            return None
+
         if file_ext == ProcessingEnum.TXT.value:
             return TextLoader(file_path, encoding="utf-8")
 
@@ -33,7 +38,9 @@ class ProcessController(BaseController):
 
     def __get_file_content(self, file_id: str):
         loader = self.__get_file_loader(file_id=file_id)
-        return loader.load()
+        if loader:
+            return loader.load()
+        return None
 
     def process_file(
         self,
@@ -42,10 +49,15 @@ class ProcessController(BaseController):
         overlap: int = 20,
     ):
         file_content = self.__get_file_content(file_id=file_id)
+
+        if file_content is None:
+            logger.error(f"File not found: {file_id}")
+            return None, True
+
         text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=chunk_size, chunk_overlap=overlap, length_function=len
         )
         file_content_texts = [rec.page_content for rec in file_content]
         metadatas = [rec.metadata for rec in file_content]
         chunks = text_splitter.create_documents(file_content_texts, metadatas)
-        return chunks
+        return chunks, False

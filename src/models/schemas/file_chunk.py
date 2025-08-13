@@ -10,6 +10,7 @@ class FileChunk(BaseModel):
     metadata: dict
     order: int = Field(..., gt=0)
     project_id: ObjectId
+    asset_id: ObjectId
 
     class Config:
         arbitrary_types_allowed = True
