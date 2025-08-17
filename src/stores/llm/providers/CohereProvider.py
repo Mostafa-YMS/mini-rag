@@ -1,24 +1,21 @@
 import logging
 
-from openai import OpenAI
+import cohere
 
-from ..LLMEnum import OpenAIRolesEnums
+from ..LLMEnum import CohereRolesEnums, DocumentTypeEnums
 from ..LLMInterface import LLMInterface
 
 
-class OpenAIProvider(LLMInterface):
+class CohereProvider(LLMInterface):
     def __init__(
         self,
         api_key: str,
-        url: str = None,
         max_input_chars: int = 1000,
         max_output_tokens: int = 1000,
         temperature: float = 0.1,
     ):
         super().__init__()
-        self.client = OpenAI
         self.api_key = api_key
-        self.url = url
         self.max_input_chars = max_input_chars
         self.max_output_tokens = max_output_tokens
         self.temperature = temperature
@@ -27,7 +24,7 @@ class OpenAIProvider(LLMInterface):
         self.__embedding_model_id = None
         self.__embedding_size = None
 
-        self.client = OpenAI(api_key=self.api_key, url=self.url)
+        self.client = cohere.Client(api_key=self.api_key)
         self.logger = logging.getLogger(__name__)
 
     def set_generation_model(self, model_id: str):
@@ -40,8 +37,8 @@ class OpenAIProvider(LLMInterface):
     def __process_text(self, text: str):
         return text[: self.max_input_chars].strip()
 
-    def __construct_prompt(self, prompt: str, role: OpenAIRolesEnums):
-        return {"role": role, "content": self.__process_text(prompt)}
+    def __construct_prompt(self, prompt: str, role: CohereRolesEnums):
+        return {"role": role, "message": self.__process_text(prompt)}
 
     def generate_text(
         self,
@@ -51,7 +48,7 @@ class OpenAIProvider(LLMInterface):
         chat_history: list = [],
     ):
         if not self.client:
-            self.logger.error("OpenAI client not initialized.")
+            self.logger.error("Cohere client not initialized.")
             return None
 
         if not self.__generation_model_id:
@@ -60,44 +57,46 @@ class OpenAIProvider(LLMInterface):
 
         max_tokens = max_tokens if max_tokens else self.max_output_tokens
         temperature = temperature if temperature else self.temperature
-        chat_history.append(
-            self.__construct_prompt(prompt=prompt, role=OpenAIRolesEnums.USER)
-        )
 
-        response = self.client.chat.completions.create(
+        response = self.client.chat(
             model=self.__generation_model_id,
-            messages=chat_history,
+            chat_history=chat_history,
             max_tokens=max_tokens,
             temperature=temperature,
+            message=self.__process_text(text=prompt),
         )
 
-        if (
-            not response
-            or not response.choices
-            or len(response.choices) == 0
-            or not response.choices[0].message
-        ):
+        if not response or not response.text:
             self.logger.error("Failed to generate text.")
             return None
 
         return response.choices[0].message.content
 
-    def embed_text(self, text: str, document_type: str):
+    def embed_text(self, text: str, document_type: str = None):
         if not self.client:
-            self.logger.error("OpenAI client not initialized.")
+            self.logger.error("Cohere client not initialized.")
             return None
+
         if not self.__embedding_model_id:
             self.logger.error("Embedding model not set.")
             return None
-        response = self.client.embeddings.create(
-            input=text, model=self.__embedding_model_id
+
+        input_type = CohereRolesEnums.DOCUMENT
+        if document_type == DocumentTypeEnums.QUERY:
+            input_type = CohereRolesEnums.QUERY
+
+        response = self.client.embed(
+            texts=[self.__process_text(text)],
+            input_type=input_type,
+            model=self.__embedding_model_id,
+            embedding_types=["float"],
         )
         if (
             not response
-            or not response.data
-            or len(response.data) == 0
-            or not response.data[0].embedding
+            or not response.embeddings
+            or len(response.embeddings.float) == 0
+            or not response.embeddings.float[0]
         ):
             self.logger.error("Failed to embed text.")
             return None
-        return response.data[0].embedding
+        return response.embeddings.float[0] 
