@@ -11,6 +11,21 @@ class Settings(BaseSettings, object):
     MONGO_URL: str
     DATABASE: str
 
+    GENERATION_BACKEND: str
+    EMBEDDING_BACKEND: str
+
+    OPENAI_API_KEY: str = None
+    OPENAI_API_URL: str = None
+    COHERE_API_KEY: str = None
+
+    GENERATION_MODEL_ID: str = None
+    EMBEDDING_MODEL_ID: str = None
+    EMBEDDING_MODEL_SIZE: int = None
+
+    MAX_INPUT_CHARS: int = None
+    GENERATION_MAX_TOKENS: int = None
+    GENERATION_TEMPERATURE: float = None
+
     class Config:
         env_file = '.env'
         env_file_encoding = 'utf-8'

@@ -2,7 +2,7 @@ import logging
 
 from openai import OpenAI
 
-from ..LLMEnum import OpenAIRolesEnums
+from ..LLMEnums import OpenAIRolesEnums
 from ..LLMInterface import LLMInterface
 
 
@@ -27,7 +27,7 @@ class OpenAIProvider(LLMInterface):
         self.__embedding_model_id = None
         self.__embedding_size = None
 
-        self.client = OpenAI(api_key=self.api_key, url=self.url)
+        self.client = OpenAI(api_key=self.api_key)
         self.logger = logging.getLogger(__name__)
 
     def set_generation_model(self, model_id: str):
@@ -40,7 +40,7 @@ class OpenAIProvider(LLMInterface):
     def __process_text(self, text: str):
         return text[: self.max_input_chars].strip()
 
-    def __construct_prompt(self, prompt: str, role: OpenAIRolesEnums):
+    def construct_prompt(self, prompt: str, role: OpenAIRolesEnums):
         return {"role": role, "content": self.__process_text(prompt)}
 
     def generate_text(

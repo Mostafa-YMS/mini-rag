@@ -2,7 +2,7 @@ import logging
 
 import cohere
 
-from ..LLMEnum import CohereRolesEnums, DocumentTypeEnums
+from ..LLMEnums import CohereRolesEnums, DocumentTypeEnums
 from ..LLMInterface import LLMInterface
 
 
@@ -37,7 +37,7 @@ class CohereProvider(LLMInterface):
     def __process_text(self, text: str):
         return text[: self.max_input_chars].strip()
 
-    def __construct_prompt(self, prompt: str, role: CohereRolesEnums):
+    def construct_prompt(self, prompt: str, role: CohereRolesEnums):
         return {"role": role, "message": self.__process_text(prompt)}
 
     def generate_text(
