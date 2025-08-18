@@ -26,6 +26,10 @@ class Settings(BaseSettings, object):
     GENERATION_MAX_TOKENS: int = None
     GENERATION_TEMPERATURE: float = None
 
+    VDB_BACKEND: str
+    VDB_PATH: str
+    VDB_DISTANCE_METHOD: str = None
+
     class Config:
         env_file = '.env'
         env_file_encoding = 'utf-8'
