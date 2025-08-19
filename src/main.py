@@ -6,6 +6,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from helpers.config import get_settings
 from routes import base, files
 from stores.llm import LLMProviderFactory
+from stores.vdb.VDBFactory import VDBFactory
 
 
 @asynccontextmanager
@@ -24,10 +25,15 @@ async def lifespan(app: FastAPI):
         settings.EMBEDDING_MODEL_ID, settings.EMBEDDING_MODEL_SIZE
     )
 
-    yield  # Application runs during this time
+    vdb_factory = VDBFactory(settings.model_dump())
+    app.vdb_client = vdb_factory.create(provider=settings.VDB_BACKEND)
+    app.vdb_client.connect()
+
+    yield
 
     # Shutdown
     app.mongodb_conn.close()
+    app.vdb_client.disconnect()
 
 app = FastAPI(lifespan=lifespan)
 

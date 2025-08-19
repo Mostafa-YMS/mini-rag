@@ -7,11 +7,13 @@ from .VDBEnums import VDBEnums
 
 
 class VDBFactory:
+
     def __init__(
-        self, config, base_controller: BaseController = Depends(BaseController)
+        self,
+        config,
     ):
         self.config = config
-        self.base_controller = base_controller
+        self.base_controller = BaseController()
 
     def create(self, provider: str):
         if provider == VDBEnums.QDRANT.value:
