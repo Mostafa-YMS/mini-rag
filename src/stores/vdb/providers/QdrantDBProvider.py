@@ -73,6 +73,7 @@ class QdrantDBProvider(VDBInterface):
                 collection_name=collection_name,
                 records=[
                     models.Record(
+                        id=record_id,
                         vector=vector,
                         payload={"metadata": metadata, "text": text},
                     )
@@ -107,12 +108,13 @@ class QdrantDBProvider(VDBInterface):
             batch_texts = texts[i:batch_end]
             batch_vectors = vectors[i:batch_end]
             batch_metadata = metadata[i:batch_end]
+            batch_record_ids = record_ids[i:batch_end]
 
             batch_records = [
-                models.Record(
-                    vector=batch_vectors[x],
-                    payload={"metadata": batch_metadata[x], "text": batch_texts[x]},
-                )
+                {
+                    "vector": batch_vectors[x],
+                    "payload": {"metadata": batch_metadata[x], "text": batch_texts[x]},
+                }
                 for x in range(len(batch_texts))
             ]
 

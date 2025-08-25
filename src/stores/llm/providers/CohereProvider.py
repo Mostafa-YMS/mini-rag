@@ -22,7 +22,7 @@ class CohereProvider(LLMInterface):
 
         self.__generation_model_id = None
         self.__embedding_model_id = None
-        self.__embedding_size = None
+        self.embedding_size = None
 
         self.client = cohere.Client(api_key=self.api_key)
         self.logger = logging.getLogger(__name__)
@@ -32,7 +32,7 @@ class CohereProvider(LLMInterface):
 
     def set_embedding_model(self, model_id: str, embedding_size: int):
         self.__embedding_model_id = model_id
-        self.__embedding_size = embedding_size
+        self.embedding_size = embedding_size
 
     def __process_text(self, text: str):
         return text[: self.max_input_chars].strip()

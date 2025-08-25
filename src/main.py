@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from helpers.config import get_settings
-from routes import base, files
+from routes import *
 from stores.llm import LLMProviderFactory
 from stores.vdb.VDBFactory import VDBFactory
 
@@ -37,5 +37,6 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-app.include_router(base.base_router)
-app.include_router(files.files_router)
+app.include_router(base_router)
+app.include_router(files_router)
+app.include_router(nlp_router)

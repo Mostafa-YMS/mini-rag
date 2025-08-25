@@ -34,21 +34,22 @@ class ChunkModel(BaseModel):
     async def get_chunk(self, chunk_id: str):
         return await self.collection.find_one({"_id": ObjectId(chunk_id)})
 
-    async def get_all_chunks(self, project_id: str, page: int = 1, limit: int = 12):
+    async def get_all_chunks(
+        self, project_id: ObjectId, page: int = 1, limit: int = 50
+    ):
         count = await self.collection.count_documents({})
         pages = count // limit if count % limit == 0 else (count // limit) + 1
 
         cursor = (
-            self.collection.find({"project_id": project_id})
+            await self.collection.find({"project_id": project_id})
             .skip((page - 1) * limit)
             .limit(limit)
+            .to_list(length=None)
         )
 
-        chunks = []
-        async for chunk in cursor:
-            chunks.append(FileChunk(**chunk))
+        return [FileChunk(**chunk) for chunk in cursor]
 
-        return {"chunks": chunks, "count": count, "pages": pages, "limit": limit}
+        # return {"chunks": chunks, "count": count, "pages": pages, "limit": limit}
 
     async def create_bulk_chunks(self, chunks: list, batch_size: int = 100):
         for i in range(0, len(chunks), batch_size):
