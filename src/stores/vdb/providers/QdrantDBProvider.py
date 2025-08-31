@@ -100,8 +100,8 @@ class QdrantDBProvider(VDBInterface):
         if metadata is None:
             metadata = [None] * len(texts)
 
-        if record_ids is None:
-            record_ids = [None] * len(texts)
+        if not record_ids:
+            record_ids = list(range(1, len(texts) + 1))
 
         for i in range(0, len(texts), batch_size):
             batch_end = i + batch_size
@@ -111,10 +111,11 @@ class QdrantDBProvider(VDBInterface):
             batch_record_ids = record_ids[i:batch_end]
 
             batch_records = [
-                {
-                    "vector": batch_vectors[x],
-                    "payload": {"metadata": batch_metadata[x], "text": batch_texts[x]},
-                }
+                models.Record(
+                    id=batch_record_ids[x],
+                    vector=batch_vectors[x],
+                    payload={"text": batch_texts[x], "metadata": batch_metadata[x]},
+                )
                 for x in range(len(batch_texts))
             ]
 

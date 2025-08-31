@@ -1,3 +1,4 @@
+import json
 from typing import List
 
 from models.schemas import FileChunk, Project
@@ -32,10 +33,15 @@ class NLPController(BaseController):
 
     def get_vdb_collection(self, project: Project):
         collection_name = self.create_collection_name(project_id=project.project_id)
-        return self.vdb_client.get_collection(collection_name=collection_name)
+        collection = self.vdb_client.get_collection(collection_name=collection_name)
+        return json.loads(json.dumps(collection, default=lambda x: x.__dict__))
 
     def index_into_vdb(
-        self, project: Project, chunks: List[FileChunk], do_reset: bool = False
+        self,
+        project: Project,
+        chunks: List[FileChunk],
+        chunks_ids: List[int] = None,
+        do_reset: bool = False,
     ):
         # get collection
         collection_name = self.create_collection_name(project_id=project.project_id)
@@ -62,6 +68,24 @@ class NLPController(BaseController):
             texts=texts,
             vectors=vectors,
             metadata=metadata,
+            record_ids=chunks_ids,
         )
 
         return True
+
+    def search_vdb(self, project: Project, text: str, limit: int = 10):
+        collection_name = self.create_collection_name(project_id=project.project_id)
+        vector = self.embedding_client.embed_text(
+            text=text, document_type=DocumentTypeEnums.QUERY.value
+        )
+        if not vector or len(vector) == 0:
+            return False
+
+        results = self.vdb_client.search_by_vector(
+            collection_name=collection_name, vector=vector, limit=limit
+        )
+
+        if not results:
+            return False
+
+        return json.loads(json.dumps(results, default=lambda x: x.__dict__))
