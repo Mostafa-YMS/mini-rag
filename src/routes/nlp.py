@@ -95,8 +95,6 @@ async def search_index(
     project_model = await ProjectModel.create_instance(db=request.app.db)
     project = await project_model.get_or_create_project(project_id=project_id)
 
-    print(search_request)
-
     if not project:
         return JSONResponse(
             content={"message": "Project not found"},

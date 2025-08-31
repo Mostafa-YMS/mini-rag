@@ -12,7 +12,6 @@ class FileController(BaseController):
         super().__init__()
 
     def validate_file(self, file: UploadFile, max_size: int):
-        # print(file.content_type)
         if max_size is not None and file.size > max_size * 1024 * 1024:
             return False
 
